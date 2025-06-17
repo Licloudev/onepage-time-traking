@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="es" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrador de Tiempo Freelance</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Configuración para Tailwind CSS -->
+    <script>
+      tailwind.config = {
+        darkMode: 'class', // Habilita el modo oscuro basado en una clase en el HTML
+      }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .blinking-colon {
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+        /* Estilo para botones deshabilitados */
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+    </style>
+    <script>
+        // Script para evitar el "flash" de tema incorrecto al cargar.
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark')
+        } else {
+          document.documentElement.classList.remove('dark')
+        }
+    </script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center min-h-screen py-8 transition-colors duration-300">
+
+    <div class="w-full max-w-2xl mx-auto p-4 md:p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg transition-colors duration-300">
+        <div class="flex justify-between items-start mb-6">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Mi Registrador de Tiempo</h1>
+            <button id="theme-toggle-btn" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800 focus:ring-blue-500 transition-colors duration-300">
+                <svg id="theme-icon-light" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                <svg id="theme-icon-dark" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+            </button>
+        </div>
+
+        <!-- Sección de Proyectos -->
+        <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+            <label for="project-selector" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Proyecto Activo:</label>
+            <div class="flex space-x-2">
+                <select id="project-selector" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></select>
+                <button id="add-project-btn" title="Añadir Nuevo Proyecto" class="flex-shrink-0 px-3 py-2 bg-blue-600 text-white font-semibold text-sm rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                </button>
+                <button id="edit-project-btn" title="Editar Proyecto Actual" class="flex-shrink-0 px-3 py-2 bg-yellow-500 text-white font-semibold text-sm rounded-lg shadow-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-75">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
+                </button>
+                 <button id="delete-project-btn" title="Eliminar Proyecto Actual" class="flex-shrink-0 px-3 py-2 bg-red-600 text-white font-semibold text-sm rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Sección del Cronómetro -->
+        <div id="timer-section" class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6 mb-6 text-center transition-colors duration-300">
+            <div id="timer-display" class="text-6xl font-bold tracking-tighter text-gray-900 dark:text-gray-100 mb-4">
+                <span>00</span><span class="blinking-colon">:</span><span>00</span><span>:</span><span>00</span>
+            </div>
+            <div class="flex justify-center space-x-4">
+                <button id="start-btn" class="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transition-transform transform hover:scale-105">Empezar</button>
+                <button id="stop-btn" class="hidden px-8 py-3 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75 transition-transform transform hover:scale-105">Parar</button>
+            </div>
+        </div>
+
+        <!-- Sección de Resumen y Progreso -->
+        <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded-r-lg mb-6 transition-colors duration-300">
+            <h2 id="total-time-title" class="text-lg font-semibold text-gray-800 dark:text-gray-300">Tiempo Total del Proyecto</h2>
+            <p id="total-time" class="text-3xl font-bold text-blue-900 dark:text-blue-300">0h 0m 0s</p>
+             <div id="progress-container" class="mt-2 hidden">
+                <div class="flex justify-between mb-1">
+                    <span id="progress-text" class="text-sm font-medium text-blue-700 dark:text-blue-300"></span>
+                    <span id="progress-percent" class="text-sm font-medium text-blue-700 dark:text-blue-300"></span>
+                </div>
+                <div class="w-full bg-blue-200 dark:bg-gray-700 rounded-full h-2.5">
+                    <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full progress-bar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sección de Acciones -->
+        <div class="flex items-center justify-between mb-4">
+             <h2 id="history-title" class="text-2xl font-bold text-gray-900 dark:text-gray-100">Historial de Tareas</h2>
+            <div class="flex items-center space-x-4">
+                 <button id="toggle-view-btn" class="text-sm font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"></button>
+                 <button id="export-btn" title="Exportar a CSV" class="p-2 bg-green-100 text-green-700 rounded-full shadow-sm hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                </button>
+                <button id="import-btn" title="Importar desde CSV" class="p-2 bg-gray-100 text-gray-700 rounded-full shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                </button>
+                <input type="file" id="import-file-input" class="hidden" accept=".csv">
+            </div>
+        </div>
+
+        <div id="history-container" class="space-y-3"></div>
+        <div id="projects-summary-container" class="space-y-4 hidden"></div>
+
+    </div>
+
+    <!-- Modal Base -->
+    <div id="modal-backdrop" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center p-4 z-50">
+        <!-- Contenido del modal se inserta aquí dinámicamente -->
+    </div>
+
+    <script>
+        // --- ELEMENTOS DEL DOM ---
+        const startBtn = document.getElementById('start-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const timerDisplay = document.getElementById('timer-display');
+        const timerSection = document.getElementById('timer-section');
+        const totalTimeDisplay = document.getElementById('total-time');
+        const totalTimeTitle = document.getElementById('total-time-title');
+        const progressContainer = document.getElementById('progress-container');
+        const progressText = document.getElementById('progress-text');
+        const progressPercent = document.getElementById('progress-percent');
+        const progressBar = document.getElementById('progress-bar');
+        const historyContainer = document.getElementById('history-container');
+        const projectsSummaryContainer = document.getElementById('projects-summary-container');
+        const historyTitle = document.getElementById('history-title');
+        const noRecordsMsg = document.createElement('p');
+        noRecordsMsg.className = 'text-gray-500 dark:text-gray-400 text-center py-4';
+        noRecordsMsg.textContent = 'Aún no hay registros.';
+        const exportBtn = document.getElementById('export-btn');
+        const importBtn = document.getElementById('import-btn');
+        const importFileInput = document.getElementById('import-file-input');
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        const themeIconLight = document.getElementById('theme-icon-light');
+        const themeIconDark = document.getElementById('theme-icon-dark');
+        const projectSelector = document.getElementById('project-selector');
+        const addProjectBtn = document.getElementById('add-project-btn');
+        const editProjectBtn = document.getElementById('edit-project-btn');
+        const deleteProjectBtn = document.getElementById('delete-project-btn');
+        const toggleViewBtn = document.getElementById('toggle-view-btn');
+        const modalBackdrop = document.getElementById('modal-backdrop');
+
+        // --- ESTADO DE LA APLICACIÓN ---
+        let timerInterval = null;
+        let startTime = 0;
+        let isRunning = false;
+        let appData = {};
+        let isSummaryView = false;
+        const defaultData = {
+            projects: {
+                'default-project': { id: 'default-project', name: 'General', records: [], maxHours: 0 }
+            },
+            currentProjectId: 'default-project'
+        };
+        const originalTitle = document.title;
+
+        // --- LÓGICA DE DATOS Y PROYECTOS ---
+        function loadData() {
+            const storedData = localStorage.getItem('freelanceTimeTrackerData');
+            appData = storedData ? JSON.parse(storedData) : { ...defaultData };
+            if (!appData.projects || Object.keys(appData.projects).length === 0) {
+                 appData = { ...defaultData };
+            }
+            for(const projectId in appData.projects) {
+                if (typeof appData.projects[projectId].maxHours === 'undefined') {
+                    appData.projects[projectId].maxHours = 0;
+                }
+            }
+            if (!appData.projects[appData.currentProjectId]) {
+                appData.currentProjectId = Object.keys(appData.projects)[0];
+            }
+            saveData();
+        }
+
+        function saveData() {
+            localStorage.setItem('freelanceTimeTrackerData', JSON.stringify(appData));
+        }
+
+        function handleProjectChange() {
+            appData.currentProjectId = projectSelector.value;
+            saveData();
+            updateUI();
+        }
+        
+        // --- MODALES ---
+        function showModal(content) {
+            modalBackdrop.innerHTML = content;
+            modalBackdrop.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            modalBackdrop.classList.add('hidden');
+            modalBackdrop.innerHTML = '';
+        }
+
+        function showNotificationModal(message) {
+            const modalHTML = `
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-8 w-full max-w-md transform transition-all">
+                    <h3 class="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">Aviso</h3>
+                    <p class="text-gray-600 dark:text-gray-400 mb-6">${message}</p>
+                    <div class="mt-8 flex justify-end">
+                        <button class="modal-close-btn px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 focus:outline-none">OK</button>
+                    </div>
+                </div>`;
+            showModal(modalHTML);
+        }
+
+        function showConfirmationModal({title, message, confirmText = 'Confirmar', confirmColor = 'red', onConfirm}) {
+            const modalHTML = `
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-8 w-full max-w-md transform transition-all">
+                    <h3 class="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">${title}</h3>
+                    <p class="text-gray-600 dark:text-gray-400 mb-6">${message}</p>
+                    <div class="mt-8 flex justify-end space-x-3">
+                        <button class="modal-close-btn px-6 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 focus:outline-none">Cancelar</button>
+                        <button id="confirm-action-btn" class="px-6 py-2 bg-${confirmColor}-600 text-white font-semibold rounded-lg hover:bg-${confirmColor}-700 focus:outline-none">${confirmText}</button>
+                    </div>
+                </div>`;
+            showModal(modalHTML);
+            document.getElementById('confirm-action-btn').onclick = () => { onConfirm(); closeModal(); };
+        }
+
+        function showProjectModal(isEditing = false) {
+            const project = isEditing ? appData.projects[appData.currentProjectId] : null;
+            const modalHTML = `
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-8 w-full max-w-md transform transition-all">
+                    <h3 class="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">${isEditing ? 'Editar Proyecto' : 'Crear Nuevo Proyecto'}</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="project-name-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre del Proyecto</label>
+                            <input type="text" id="project-name-input" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value="${isEditing ? project.name : ''}" placeholder="Mi Nuevo Proyecto...">
+                        </div>
+                        <div>
+                            <label for="project-hours-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Horas Máximas (opcional)</label>
+                            <input type="number" id="project-hours-input" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value="${isEditing && project.maxHours > 0 ? project.maxHours : ''}" placeholder="Ej: 50 (0 o vacío para ilimitado)">
+                        </div>
+                    </div>
+                    <div class="mt-8 flex justify-end space-x-3">
+                        <button class="modal-close-btn px-6 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 focus:outline-none">Cancelar</button>
+                        <button id="save-project-btn" class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 focus:outline-none">${isEditing ? 'Guardar Cambios' : 'Crear'}</button>
+                    </div>
+                </div>`;
+            showModal(modalHTML);
+            document.getElementById('save-project-btn').onclick = () => {
+                const nameInput = document.getElementById('project-name-input');
+                const hoursInput = document.getElementById('project-hours-input');
+                const name = nameInput.value.trim();
+                const maxHours = parseFloat(hoursInput.value) || 0;
+                
+                if (!name) {
+                    showNotificationModal("El nombre del proyecto no puede estar vacío.");
+                    return;
+                }
+                
+                if (isEditing) {
+                    project.name = name;
+                    project.maxHours = maxHours;
+                } else {
+                    const newId = 'project-' + Date.now();
+                    appData.projects[newId] = { id: newId, name, records: [], maxHours };
+                    appData.currentProjectId = newId;
+                }
+                saveData();
+                isSummaryView = false;
+                updateUI();
+                closeModal();
+            };
+            document.getElementById('project-name-input').focus();
+        }
+
+        function showTaskModal({recordId, duration}) {
+             const isEditing = !!recordId;
+             let record;
+             if (isEditing) {
+                const project = findProjectByRecordId(recordId);
+                record = project.records.find(r => r.id === recordId);
+             }
+
+             const modalHTML = `
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-8 w-full max-w-md transform transition-all">
+                    <h3 class="text-2xl font-bold mb-2 text-gray-900 dark:text-gray-100">${isEditing ? 'Editar Registro' : '¿En qué has trabajado?'}</h3>
+                    <p class="text-gray-600 dark:text-gray-400 mb-6">${isEditing ? 'Modifica la duración o la descripción.' : `Has trabajado durante ${formatDuration(duration, 'text')}.`}</p>
+                    ${isEditing ? `
+                    <div class="mb-4">
+                        <label for="edit-duration-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Duración (HH:MM:SS)</label>
+                        <input type="text" id="edit-duration-input" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value="${formatDuration(record.duration, 'digital')}">
+                    </div>` : ''}
+                    <div>
+                        <label for="description-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descripción de la tarea</label>
+                        <textarea id="description-input" rows="3" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ej: Diseño de la página de inicio...">${isEditing ? record.description : ''}</textarea>
+                    </div>
+                    <div class="mt-8 flex justify-end space-x-3">
+                        <button class="modal-close-btn px-6 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 focus:outline-none">Cancelar</button>
+                        <button id="save-task-btn" class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 focus:outline-none">Guardar</button>
+                    </div>
+                </div>`;
+            showModal(modalHTML);
+
+            document.getElementById('save-task-btn').onclick = () => {
+                const description = document.getElementById('description-input').value.trim();
+                let newDuration = duration;
+                if(isEditing) {
+                    const durationInput = document.getElementById('edit-duration-input').value;
+                    const durationParts = durationInput.split(':');
+                    if(durationParts.length === 3) {
+                        const h = parseInt(durationParts[0],10)||0, m = parseInt(durationParts[1],10)||0, s = parseInt(durationParts[2],10)||0;
+                        newDuration = (h * 3600 + m * 60 + s) * 1000;
+                    }
+                }
+                saveTask({recordId, description, duration: newDuration});
+            };
+            document.getElementById('description-input').focus();
+        }
+
+        function showProjectHistoryModal(projectId) {
+            const project = appData.projects[projectId];
+            if (!project) return;
+
+            let recordsHTML = '';
+            if (project.records.length > 0) {
+                recordsHTML = project.records
+                    .map(record => `
+                        <div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg flex items-center justify-between">
+                            <div>
+                                <p class="font-semibold text-gray-800 dark:text-gray-200">${record.description}</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">${new Date(record.timestamp).toLocaleString('es-ES')}</p>
+                            </div>
+                            <span class="font-bold text-gray-700 dark:text-gray-300">${formatDuration(record.duration, 'digital')}</span>
+                        </div>
+                    `).join('');
+            } else {
+                recordsHTML = `<p class="text-gray-500 dark:text-gray-400 text-center py-4">No hay registros para este proyecto.</p>`;
+            }
+
+            const modalHTML = `
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-2xl transform transition-all flex flex-col" style="max-height: 80vh;">
+                    <div class="flex justify-between items-center mb-4">
+                         <h3 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Historial: ${project.name}</h3>
+                         <button class="modal-close-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                         </button>
+                    </div>
+                    <div class="overflow-y-auto space-y-3 pr-2">
+                        ${recordsHTML}
+                    </div>
+                    <div class="mt-6 flex justify-end">
+                        <button class="modal-close-btn px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 focus:outline-none">Cerrar</button>
+                    </div>
+                </div>`;
+            showModal(modalHTML);
+        }
+
+        // --- LÓGICA DEL TEMA ---
+        function updateThemeIcon() {
+            if (document.documentElement.classList.contains('dark')) {
+                themeIconLight.classList.add('hidden');
+                themeIconDark.classList.remove('hidden');
+            } else {
+                themeIconLight.classList.remove('hidden');
+                themeIconDark.classList.add('hidden');
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateThemeIcon();
+        }
+
+        // --- LÓGICA DEL CRONÓMETRO Y TAREAS ---
+        function startTimer() {
+            if (isRunning) return;
+            isRunning = true;
+            startTime = Date.now();
+            startBtn.classList.add('hidden');
+            stopBtn.classList.remove('hidden');
+            timerInterval = setInterval(updateTimerDisplay, 1000);
+            updateTimerDisplay(); // Update title immediately
+        }
+
+        function stopTimer() {
+            if (!isRunning) return;
+            isRunning = false;
+            clearInterval(timerInterval);
+            document.title = originalTitle;
+            const duration = Date.now() - startTime;
+            stopBtn.classList.add('hidden');
+            startBtn.classList.remove('hidden');
+            showTaskModal({duration});
+            resetTimerDisplay();
+        }
+
+        function saveTask({recordId, description, duration}) {
+            if (!description) {
+                showNotificationModal('Por favor, introduce una descripción.');
+                return;
+            }
+            
+            const project = recordId ? findProjectByRecordId(recordId) : appData.projects[appData.currentProjectId];
+
+            if (recordId) { // Editando
+                const record = project.records.find(r => r.id === recordId);
+                if (record) {
+                    record.description = description;
+                    record.duration = duration;
+                }
+            } else { // Creando
+                project.records.push({
+                    id: `record-${Date.now()}`,
+                    description,
+                    duration,
+                    timestamp: new Date().toISOString()
+                });
+            }
+            project.records.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            saveData();
+            updateUI();
+            closeModal();
+        }
+        
+        // --- RENDERIZADO Y UI ---
+        function updateUI() {
+            populateProjectSelector();
+            
+            if (isSummaryView) {
+                historyContainer.classList.add('hidden');
+                projectsSummaryContainer.classList.remove('hidden');
+                historyTitle.textContent = "Resumen de Proyectos";
+                toggleViewBtn.textContent = "Ver Proyecto Actual";
+                renderAllProjectsSummary();
+            } else {
+                historyContainer.classList.remove('hidden');
+                projectsSummaryContainer.classList.add('hidden');
+                historyTitle.textContent = "Historial de Tareas";
+                toggleViewBtn.textContent = "Ver Resumen de Proyectos";
+                renderHistory();
+            }
+
+            updateTotalTime(isSummaryView);
+            renderProgressBar(isSummaryView);
+            
+            projectSelector.disabled = isSummaryView;
+            timerSection.style.display = isSummaryView ? 'none' : 'block';
+            addProjectBtn.style.display = isSummaryView ? 'none' : 'inline-flex';
+            deleteProjectBtn.style.display = isSummaryView ? 'none' : 'inline-flex';
+            editProjectBtn.style.display = isSummaryView ? 'none' : 'inline-flex';
+            importBtn.style.display = isSummaryView ? 'none' : 'inline-flex';
+            exportBtn.style.display = isSummaryView ? 'none' : 'inline-flex';
+        }
+        
+        function populateProjectSelector() {
+            projectSelector.innerHTML = '';
+            for (const projectId in appData.projects) {
+                const project = appData.projects[projectId];
+                const option = document.createElement('option');
+                option.value = project.id;
+                option.textContent = project.name;
+                projectSelector.appendChild(option);
+            }
+            projectSelector.value = appData.currentProjectId;
+        }
+
+        function renderAllProjectsSummary() {
+            projectsSummaryContainer.innerHTML = '';
+            if (Object.keys(appData.projects).length === 0) {
+                 projectsSummaryContainer.appendChild(noRecordsMsg);
+                 return;
+            }
+
+            for (const projectId in appData.projects) {
+                const project = appData.projects[projectId];
+                const totalSeconds = project.records.reduce((total, record) => total + record.duration, 0) / 1000;
+                
+                const card = document.createElement('div');
+                card.className = 'bg-gray-50 dark:bg-gray-700/60 p-4 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700';
+                card.dataset.projectId = projectId;
+
+                let progressBarHTML = '';
+                if (project.maxHours > 0) {
+                    const totalHours = totalSeconds / 3600;
+                    const percentage = Math.min((totalHours / project.maxHours) * 100, 100);
+                    let barColor = 'bg-green-600';
+                    if (percentage >= 90) barColor = 'bg-red-600';
+                    else if (percentage >= 70) barColor = 'bg-yellow-500';
+
+                    progressBarHTML = `
+                        <div class="mt-2">
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">${totalHours.toFixed(1)} / ${project.maxHours} h</span>
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">${Math.round(percentage)}%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5">
+                                <div class="h-2.5 rounded-full progress-bar ${barColor}" style="width: ${percentage}%"></div>
+                            </div>
+                        </div>`;
+                }
+                
+                card.innerHTML = `
+                    <h3 class="font-bold text-lg text-gray-900 dark:text-gray-100">${project.name}</h3>
+                    <p class="text-gray-600 dark:text-gray-400">Tiempo total: ${formatDuration(totalSeconds * 1000, 'text-long')}</p>
+                    ${progressBarHTML}`;
+                
+                projectsSummaryContainer.appendChild(card);
+            }
+        }
+        
+        function renderHistory() {
+            historyContainer.innerHTML = '';
+            const currentProject = appData.projects[appData.currentProjectId];
+            const recordsToShow = currentProject ? currentProject.records : [];
+            
+            if (recordsToShow.length === 0) {
+                historyContainer.appendChild(noRecordsMsg);
+            } else {
+                if(noRecordsMsg.parentNode) noRecordsMsg.parentNode.removeChild(noRecordsMsg);
+                recordsToShow.forEach(record => {
+                    const recordEl = document.createElement('div');
+                    recordEl.className = 'bg-gray-50 dark:bg-gray-700/60 p-4 rounded-lg flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200';
+                    recordEl.innerHTML = `
+                        <div>
+                            <p class="font-semibold text-gray-800 dark:text-gray-200">${record.description}</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">${formatDuration(record.duration, 'text')}</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                             <span class="font-bold text-lg text-gray-700 dark:text-gray-300">${formatDuration(record.duration, 'digital')}</span>
+                             <button data-record-id="${record.id}" class="edit-task-btn p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
+                             <button data-record-id="${record.id}" class="delete-task-btn p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg></button>
+                        </div>`;
+                    historyContainer.appendChild(recordEl);
+                });
+            }
+        }
+        
+        function renderProgressBar(isSummaryView) {
+            if (isSummaryView) {
+                progressContainer.classList.add('hidden');
+                return;
+            }
+            const project = appData.projects[appData.currentProjectId];
+            if (!project || project.maxHours <= 0) {
+                progressContainer.classList.add('hidden');
+                return;
+            }
+            
+            progressContainer.classList.remove('hidden');
+            const totalSeconds = project.records.reduce((total, record) => total + record.duration, 0) / 1000;
+            const totalHours = totalSeconds / 3600;
+            const percentage = Math.min((totalHours / project.maxHours) * 100, 100);
+
+            progressText.textContent = `${totalHours.toFixed(1)} / ${project.maxHours} horas`;
+            progressPercent.textContent = `${Math.round(percentage)}%`;
+            progressBar.style.width = `${percentage}%`;
+
+            progressBar.classList.remove('bg-green-600', 'bg-yellow-500', 'bg-red-600', 'bg-blue-600');
+            if (percentage >= 90) {
+                progressBar.classList.add('bg-red-600');
+            } else if (percentage >= 70) {
+                progressBar.classList.add('bg-yellow-500');
+            } else {
+                progressBar.classList.add('bg-green-600');
+            }
+        }
+        
+        function triggerDeleteProject() {
+            const projectToDeleteId = appData.currentProjectId;
+            if (Object.keys(appData.projects).length <= 1) {
+                showNotificationModal("No puedes eliminar el último proyecto.");
+                return;
+            }
+            const projectToDeleteName = appData.projects[projectToDeleteId].name;
+            showConfirmationModal({
+                title: 'Eliminar Proyecto',
+                message: `¿Estás seguro de que quieres eliminar el proyecto "<strong>${projectToDeleteName}</strong>" y todos sus registros? Esta acción no se puede deshacer.`,
+                confirmText: 'Eliminar',
+                onConfirm: () => {
+                    delete appData.projects[projectToDeleteId];
+                    appData.currentProjectId = Object.keys(appData.projects)[0];
+                    saveData();
+                    updateUI();
+                }
+            });
+        }
+        
+        function triggerDeleteTask(recordId) {
+             showConfirmationModal({
+                title: 'Eliminar Registro',
+                message: '¿Estás seguro de que quieres eliminar este registro?',
+                confirmText: 'Eliminar',
+                onConfirm: () => {
+                    const project = findProjectByRecordId(recordId);
+                    if(project) {
+                        project.records = project.records.filter(r => r.id !== recordId);
+                        saveData();
+                        updateUI();
+                    }
+                }
+            });
+        }
+        
+        // --- LÓGICA DE IMPORTAR/EXPORTAR ---
+        function exportToCSV() {
+            let recordsToExport = [];
+            let fileName = 'historial_tiempo.csv';
+
+            if (isSummaryView) {
+                 for (const projectId in appData.projects) {
+                    const project = appData.projects[projectId];
+                    project.records.forEach(record => {
+                        recordsToExport.push({ ...record, projectName: project.name });
+                    });
+                }
+                fileName = `historial_todos_proyectos_${new Date().toISOString().slice(0,10)}.csv`;
+            } else {
+                const currentProject = appData.projects[appData.currentProjectId];
+                recordsToExport = currentProject ? currentProject.records : [];
+                fileName = `historial_${currentProject.name.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().slice(0,10)}.csv`;
+            }
+
+            if (recordsToExport.length === 0) {
+                showNotificationModal('No hay registros para exportar.');
+                return;
+            }
+            
+            const headers = isSummaryView
+                ? ['Proyecto', 'Fecha y Hora', 'Descripcion', 'Duracion (HH:MM:SS)']
+                : ['Fecha y Hora', 'Descripcion', 'Duracion (HH:MM:SS)'];
+            
+            const csvRows = [headers.join(',')];
+            recordsToExport.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)).forEach(r => {
+                const description = `"${r.description.replace(/"/g, '""')}"`;
+                const row = [
+                    new Date(r.timestamp).toLocaleString('es-ES'),
+                    description,
+                    formatDuration(r.duration, 'digital')
+                ];
+                if(isSummaryView) {
+                    row.unshift(r.projectName);
+                }
+                csvRows.push(row.join(','));
+            });
+
+            const blob = new Blob(['\uFEFF' + csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            link.click();
+        }
+
+        function handleFileImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (!file.name.endsWith('.csv')) {
+                showNotificationModal('Por favor, selecciona un archivo CSV válido.');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const currentProjectName = appData.projects[appData.currentProjectId].name;
+                showConfirmationModal({
+                    title: 'Importar Historial',
+                    message: `¿Estás seguro de que quieres reemplazar el historial del proyecto "<strong>${currentProjectName}</strong>"? Se perderán todos sus registros actuales.`,
+                    confirmText: 'Reemplazar',
+                    onConfirm: () => {
+                        try {
+                            const newRecords = parseCSV(e.target.result);
+                            const currentProject = appData.projects[appData.currentProjectId];
+                            currentProject.records = newRecords;
+                            currentProject.records.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                            saveData();
+                            updateUI();
+                            showNotificationModal('Historial importado con éxito.');
+                        } catch (error) {
+                            showNotificationModal(`Error al procesar el archivo CSV: ${error.message}`);
+                        } finally {
+                            importFileInput.value = '';
+                        }
+                    }
+                });
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        function parseCSV(text) {
+            const newRecords = [];
+            text.trim().split('\n').slice(1).forEach((line, i) => {
+                if (!line) return;
+                try {
+                    const parts = line.match(/(?:,"|^)(?:"([^"]*(?:""[^"]*)*)"|([^,"]*))/g).map(p=>p.replace(/^,/, ''));
+                    if (parts.length < 3) return;
+                    const desc = parts[1].replace(/^"|"$/g, '').replace(/""/g, '"');
+                    const durParts = parts[2].trim().split(':');
+                    if (durParts.length !== 3) return;
+                    const [h, m, s] = durParts.map(p => parseInt(p,10)||0);
+                    const durMs = (h * 3600 + m * 60 + s) * 1000;
+                    if (desc && !isNaN(durMs)) {
+                        newRecords.push({ id: `imported-${Date.now()}-${i}`, description: desc, duration: durMs, timestamp: new Date().toISOString() });
+                    }
+                } catch(e) { console.warn("Error parsing CSV line:", line, e); }
+            });
+            return newRecords;
+        }
+        
+        // --- FUNCIONES DE UTILIDAD Y FORMATO ---
+        function findProjectByRecordId(recordId) {
+            for (const projectId in appData.projects) {
+                const project = appData.projects[projectId];
+                if (project.records.some(r => r.id === recordId)) {
+                    return project;
+                }
+            }
+            return null;
+        }
+
+        function updateTimerDisplay() {
+            const elapsed = Date.now() - startTime;
+            const formattedTime = formatDuration(elapsed, 'digital');
+            const [h, m, s] = formattedTime.split(':');
+            timerDisplay.innerHTML = `<span>${h}</span><span class="blinking-colon">:</span><span>${m}</span><span>:</span><span>${s}</span>`;
+            
+            const projectName = appData.projects[appData.currentProjectId].name;
+            document.title = `▶ ${formattedTime} - ${projectName}`;
+        }
+
+        function resetTimerDisplay() {
+             timerDisplay.innerHTML = '<span>00</span><span class="blinking-colon">:</span><span>00</span><span>:</span><span>00</span>';
+        }
+
+        function updateTotalTime(isSummaryView) {
+            let totalMilliseconds = 0;
+            let title = 'Tiempo Total';
+            
+            if (isSummaryView) {
+                for (const projectId in appData.projects) {
+                    totalMilliseconds += appData.projects[projectId].records.reduce((total, record) => total + record.duration, 0);
+                }
+                title = 'Tiempo Total (Todos los Proyectos)';
+            } else {
+                const currentProject = appData.projects[appData.currentProjectId];
+                if (currentProject) {
+                    totalMilliseconds = currentProject.records.reduce((total, record) => total + record.duration, 0);
+                    title = `Tiempo Total del Proyecto "${currentProject.name}"`;
+                }
+            }
+            
+            totalTimeDisplay.textContent = formatDuration(totalMilliseconds, 'text-long');
+            totalTimeTitle.textContent = title;
+        }
+
+        function formatDuration(duration, format = 'digital') {
+            if (isNaN(duration) || duration < 0) return format === 'digital' ? '00:00:00' : '0s';
+            let s = Math.floor(duration / 1000), h = Math.floor(s / 3600);
+            s %= 3600; let m = Math.floor(s / 60); s %= 60;
+            if (format === 'digital') return [h, m, s].map(v => v.toString().padStart(2, '0')).join(':');
+            const parts = [];
+            if (h > 0) parts.push(`${h}h`);
+            if (m > 0) parts.push(`${m}m`);
+            if (s > 0 || parts.length === 0) parts.push(`${s}s`);
+            return (format === 'text-long') ? parts.join(' ') : parts.slice(0, 2).join(' ');
+        }
+
+        // --- INICIALIZACIÓN ---
+        function init() {
+            startBtn.addEventListener('click', startTimer);
+            stopBtn.addEventListener('click', stopTimer);
+            exportBtn.addEventListener('click', exportToCSV);
+            importBtn.addEventListener('click', () => importFileInput.click());
+            importFileInput.addEventListener('change', handleFileImport);
+            themeToggleBtn.addEventListener('click', toggleTheme);
+            addProjectBtn.addEventListener('click', () => showProjectModal(false));
+            editProjectBtn.addEventListener('click', () => showProjectModal(true));
+            deleteProjectBtn.addEventListener('click', triggerDeleteProject);
+            projectSelector.addEventListener('change', handleProjectChange);
+            toggleViewBtn.addEventListener('click', () => {
+                isSummaryView = !isSummaryView;
+                updateUI();
+            })
+            
+            document.body.addEventListener('click', e => {
+                const target = e.target.closest('button');
+                if (target && target.matches('.modal-close-btn')) closeModal();
+                if (target && target.matches('.edit-task-btn')) showTaskModal({recordId: target.dataset.recordId});
+                if (target && target.matches('.delete-task-btn')) triggerDeleteTask(target.dataset.recordId);
+            });
+
+            projectsSummaryContainer.addEventListener('click', e => {
+                const card = e.target.closest('[data-project-id]');
+                if (card) {
+                    showProjectHistoryModal(card.dataset.projectId);
+                }
+            });
+            
+            updateThemeIcon();
+            loadData();
+            updateUI();
+        }
+        
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
